@@ -1,0 +1,124 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ConvoClassssssh</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ConvoClassssssh.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <h1>@ViewBag.Title</h1>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+
+            <label for="iframeCode">Enter Iframe Code:</label>
+            <input type="text" id="iframeCode" placeholder="Paste your iframe code here">
+            <button onclick="updateIframe()">Load Video</button>
+
+            <iframe id="embeddedVideo" allowfullscreen></iframe>
+
+            <div class="poll-container">
+                <div class="poll-question">What is your favorite programming language?</div>
+
+                <div class="poll-options">
+                    <div class="poll-option" onclick="vote('option1')">JavaScript</div>
+                    <div class="poll-option" onclick="vote('option2')">Python</div>
+                    <div class="poll-option" onclick="vote('option3')">Java</div>
+                    <div class="poll-option" onclick="vote('option4')">C++</div>
+                </div>
+
+                <button class="poll-button" onclick="submitVote()">Submit Vote</button>
+            </div>
+
+            <div id="chat-container"></div>
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+
+        </main>
+        <script>
+            function updateIframe() {
+                var iframeCode = document.getElementById("iframeCode").value;
+                var iframeElement = document.getElementById("embeddedVideo");
+
+                // Update the iframe source
+                iframeElement.src = iframeCode;
+            }
+
+            let selectedOption = null;
+
+            function vote(option) {
+                selectedOption = option;
+                // Add visual indication of selected option if needed
+                document.querySelectorAll('.poll-option').forEach(elem => {
+                    elem.style.backgroundColor = elem.textContent === option ? '#4CAF50' : '#fff';
+                    elem.style.color = elem.textContent === option ? '#fff' : '#000';
+                });
+            }
+
+            function submitVote() {
+                if (selectedOption) {
+                    alert(`You voted for ${selectedOption}! (Note: This is a simple example, and the votes are not actually stored)`);
+                } else {
+                    alert('Please select an option before submitting your vote.');
+                }
+            }
+
+            const chatContainer = document.getElementById('chat-container');
+            const messageInput = document.getElementById('message-input');
+
+            const socket = new WebSocket('ws://your-server-url'); // Replace 'your-server-url' with the actual WebSocket server URL
+
+            socket.addEventListener('open', (event) => {
+                console.log('WebSocket connection opened:', event);
+            });
+
+            socket.addEventListener('message', (event) => {
+                const message = JSON.parse(event.data);
+                displayMessage(message);
+            });
+
+            socket.addEventListener('close', (event) => {
+                console.log('WebSocket connection closed:', event);
+            });
+
+            function sendMessage() {
+                const messageText = messageInput.value.trim();
+
+                if (messageText !== '') {
+                    const message = {
+                        type: 'chat',
+                        text: messageText,
+                    };
+
+                    socket.send(JSON.stringify(message));
+                    messageInput.value = '';
+                }
+            }
+
+            function displayMessage(message) {
+                const messageElement = document.createElement('div');
+                messageElement.textContent = `${message.username}: ${message.text}`;
+                chatContainer.appendChild(messageElement);
+
+                // Scroll to the bottom of the chat container to show the latest message
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        </script>
+    </div>
+
+    <footer>
+        <p>&copy; @DateTime.Now.Year @ViewBag.Title. All rights reserved.</p>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
